@@ -98,6 +98,22 @@ export const $chatGPTApiKeyModalOpen = createStore<boolean>(false);
 export const chatGPTApiKeyModalOpened = createEvent();
 export const chatGPTApiKeyModalClosed = createEvent();
 
+export const $geminiApiKey = withPersist(createStore<string>(""));
+export const geminiApiKeyChanged = createEvent<string>();
+export const geminiApiKeyChangeFx = createEffect<string, string>(
+  (value) => value,
+);
+
+export const $geminiModel = withPersist(createStore<string>("gemini-2.0-flash-exp"));
+export const geminiModelChanged = createEvent<string>();
+export const geminiModelChangeFx = createEffect<string, string>(
+  (value) => value,
+);
+
+export const $geminiApiKeyModalOpen = createStore<boolean>(false);
+export const geminiApiKeyModalOpened = createEvent();
+export const geminiApiKeyModalClosed = createEvent();
+
 export const $subsFontSize = withPersist(createStore<number>(100));
 export const subsFontSizeButtonPressed = createEvent<number>();
 export const subsFontSizeChangeFx = createEffect<number, number>(
@@ -177,6 +193,12 @@ sample({
 });
 
 sample({
+  clock: translationServiceChanged,
+  filter: (service) => service === "gemini",
+  target: geminiApiKeyModalOpened,
+});
+
+sample({
   clock: deeplApiKeyChanged,
   target: deeplApiKeyChangeFx,
 });
@@ -247,6 +269,10 @@ $chatGPTApiKey.on(chatGPTApiKeyChangeFx.doneData, (_, key) => key);
 $chatGPTModel.on(chatGPTModelChangeFx.doneData, (_, model) => model);
 $chatGPTApiKeyModalOpen.on(chatGPTApiKeyModalOpened, () => true);
 $chatGPTApiKeyModalOpen.on(chatGPTApiKeyModalClosed, () => false);
+$geminiApiKey.on(geminiApiKeyChangeFx.doneData, (_, key) => key);
+$geminiModel.on(geminiModelChangeFx.doneData, (_, model) => model);
+$geminiApiKeyModalOpen.on(geminiApiKeyModalOpened, () => true);
+$geminiApiKeyModalOpen.on(geminiApiKeyModalClosed, () => false);
 $subsFontSize.on(
   subsFontSizeChangeFx.doneData,
   (_, subsFontSize) => subsFontSize,

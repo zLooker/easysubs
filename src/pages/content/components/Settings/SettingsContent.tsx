@@ -5,6 +5,7 @@ import { TranslateLanguage } from "./TranslateLanguage";
 import { TranslationService } from "./TranslationService";
 import { DeepLApiKeyModal } from "./DeepLApiKeyModal";
 import { ChatGPTApiKeyModal } from "./ChatGPTApiKeyModal";
+import { GeminiApiKeyModal } from "./GeminiApiKeyModal";
 import { LearningService } from "./LearningService";
 import { SubsDelay } from "./SubsDelay";
 import { SubsFontSize } from "./SubsFontSize";
@@ -158,6 +159,7 @@ export const SettingsContent: FC<{ onClose: () => void }> = ({ onClose }) => {
       </div>
       {createPortal(<DeepLApiKeyModal />, document.querySelector("body"))}
       {createPortal(<ChatGPTApiKeyModal />, document.querySelector("body"))}
+      {createPortal(<GeminiApiKeyModal />, document.querySelector("body"))}
     </>
   );
 };

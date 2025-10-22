@@ -92,7 +92,7 @@ export type TLearningService =
   | "puzzle-english"
   | "disabled";
 
-export type TTranslationService = "google" | "deepl" | "bing" | "yandex" | "chatgpt";
+export type TTranslationService = "google" | "deepl" | "bing" | "yandex" | "chatgpt" | "gemini";
 
 export type Captions = subTitleType[];
 

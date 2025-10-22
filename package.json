@@ -24,6 +24,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@google/genai": "^0.3.0",
     "@ifyour/deeplx": "^0.1.17",
     "anylang": "^3.2.1",
     "classnames": "^2.5.1",

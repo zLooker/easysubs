@@ -22,6 +22,8 @@ import {
   $deeplApiKey,
   $chatGPTApiKey,
   $chatGPTModel,
+  $geminiApiKey,
+  $geminiModel,
 } from "../settings";
 import { googleNumberToPartOfSpeach } from "@src/utils/googleNumberToPartOfSpeach";
 import { createGate } from "effector-react";
@@ -71,9 +73,11 @@ export const fetchSubTranslationFx = createEffect<
     deeplApiKey: string;
     chatGPTApiKey: string;
     chatGPTModel: string;
+    geminiApiKey: string;
+    geminiModel: string;
   },
   string
->(async ({ source, language, translationService, deeplApiKey, chatGPTApiKey, chatGPTModel }) => {
+>(async ({ source, language, translationService, deeplApiKey, chatGPTApiKey, chatGPTModel, geminiApiKey, geminiModel }) => {
   try {
     const resp = await chrome.runtime.sendMessage({
       type: "translateFullText",
@@ -83,6 +87,8 @@ export const fetchSubTranslationFx = createEffect<
       deeplApiKey: deeplApiKey,
       chatGPTApiKey: chatGPTApiKey,
       chatGPTModel: chatGPTModel,
+      geminiApiKey: geminiApiKey,
+      geminiModel: geminiModel,
     });
 
     if (resp.error) {
@@ -93,7 +99,8 @@ export const fetchSubTranslationFx = createEffect<
       translationService === "deepl" ||
       translationService === "bing" ||
       translationService === "yandex" ||
-      translationService === "chatgpt"
+      translationService === "chatgpt" ||
+      translationService === "gemini"
     ) {
       return resp;
     } else {
@@ -234,14 +241,18 @@ sample({
     deeplApiKey: $deeplApiKey,
     chatGPTApiKey: $chatGPTApiKey,
     chatGPTModel: $chatGPTModel,
+    geminiApiKey: $geminiApiKey,
+    geminiModel: $geminiModel,
   },
-  fn: ({ language, translationService, deeplApiKey, chatGPTApiKey, chatGPTModel }, source) => ({
+  fn: ({ language, translationService, deeplApiKey, chatGPTApiKey, chatGPTModel, geminiApiKey, geminiModel }, source) => ({
     source,
     language,
     translationService,
     deeplApiKey,
     chatGPTApiKey,
     chatGPTModel,
+    geminiApiKey,
+    geminiModel,
   }),
   target: fetchSubTranslationFx,
 });

@@ -6,7 +6,15 @@
       "Bash(find:*)",
       "Bash(git log:*)",
       "Bash(pnpm build:*)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npm install:*)",
+      "WebSearch",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(cat:*)",
+      "Bash(pnpm config set:*)"
     ],
     "deny": []
   }
