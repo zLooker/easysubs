@@ -50,6 +50,14 @@ class Youtube implements Service {
     if (label === "auto") {
       const keys = Object.keys(cacheForVideo);
       const anyHref = Object.values(cacheForVideo)[0];
+
+      console.log("[EasySubs] Dual subs 'auto' mode:", {
+        videoId,
+        currentLang: this.currentLang,
+        availableLanguages: keys,
+        cacheUrls: Object.entries(cacheForVideo).map(([k, v]) => [k, v])
+      });
+
       if (!anyHref && keys.length === 0) return parse("");
 
       // Try to infer original language from cached URL's 'lang' (base track)
@@ -57,24 +65,37 @@ class Youtube implements Service {
         const anyUrl = new URL(anyHref);
         const originalLang = anyUrl.searchParams.get("lang") || "";
 
-        if (originalLang && originalLang !== this.currentLang) {
-          // Pick original track language
+        console.log("[EasySubs] Detected original language:", originalLang);
+
+        if (originalLang) {
+          // Always pick the original track language for dual subs
           targetLabel = originalLang;
-          // Use cached href if present for original; otherwise build it by removing 'tlang'
-          baseHref = cacheForVideo[targetLabel];
-          if (!baseHref) {
-            anyUrl.searchParams.delete("tlang");
-            anyUrl.searchParams.set("lang", originalLang);
-            baseHref = anyUrl.href;
+
+          // First, try to find a cached URL without 'tlang' (pure original subtitle)
+          const originalHref = Object.values(cacheForVideo).find(href => {
+            const url = new URL(href);
+            const lang = url.searchParams.get("lang");
+            const tlang = url.searchParams.get("tlang");
+            return lang === originalLang && !tlang;
+          });
+
+          if (originalHref) {
+            baseHref = originalHref;
+            console.log("[EasySubs] Found original subtitle in cache (no tlang)");
+          } else {
+            // Build a URL with only 'lang' parameter (no 'tlang' for original)
+            const cleanUrl = new URL(anyHref);
+            cleanUrl.searchParams.delete("tlang");
+            cleanUrl.searchParams.set("lang", originalLang);
+            baseHref = cleanUrl.href;
+            console.log("[EasySubs] Built original subtitle URL:", baseHref);
           }
         } else {
-          // Fallback: choose any track different from current main
-          const different = keys.find((k) => k && k !== this.currentLang);
-          targetLabel = different || keys[0] || "";
-          if (!targetLabel) return parse("");
+          console.log("[EasySubs] Could not detect original language, returning empty");
+          return parse("");
         }
       } else {
-        // No hrefs cached yet; nothing to resolve
+        console.log("[EasySubs] No cached subtitles available yet");
         return parse("");
       }
     }

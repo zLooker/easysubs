@@ -3,7 +3,10 @@
     "allow": [
       "WebFetch(domain:raw.githubusercontent.com)",
       "mcp__github__get_file_contents",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm tsc:*)"
     ],
     "deny": []
   }
