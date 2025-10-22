@@ -120,6 +120,18 @@ export const $autoPause = withPersist(createStore<boolean>(false));
 export const autoPauseChanged = createEvent<boolean>();
 $autoPause.on(autoPauseChanged, (_, value) => value);
 
+export const $dualSubEnabled = withPersist(createStore<boolean>(false));
+export const dualSubEnabledChanged = createEvent<boolean>();
+export const dualSubEnabledChangeFx = createEffect<boolean, boolean>(
+  (isEnabled) => isEnabled,
+);
+
+export const $dualSubLanguage = withPersist(createStore<string>("auto"));
+export const dualSubLanguageChanged = createEvent<string>();
+export const dualSubLanguageChangeFx = createEffect<string, string>(
+  (language) => language,
+);
+
 export const esRenderSetings = createEvent();
 
 sample({
@@ -195,6 +207,16 @@ sample({
   target: subsBackgroundOpacityChangeFx,
 });
 
+sample({
+  clock: dualSubEnabledChanged,
+  target: dualSubEnabledChangeFx,
+});
+
+sample({
+  clock: dualSubLanguageChanged,
+  target: dualSubLanguageChangeFx,
+});
+
 $enabled.on(enableToggleChangeFx.doneData, (_, isEnabled) => isEnabled);
 $progressBarEnabled.on(
   progressBarEnabledChangeFx.doneData,
@@ -235,6 +257,8 @@ $subsBackgroundOpacity.on(
   (_, value) => value,
 );
 $activeSettingsTab.on(activeSettingsTabChanged, (_, value) => value);
+$dualSubEnabled.on(dualSubEnabledChangeFx.doneData, (_, isEnabled) => isEnabled);
+$dualSubLanguage.on(dualSubLanguageChangeFx.doneData, (_, language) => language);
 
 $enabled.watch((isEnabled) => {
   document.body.classList.toggle("es-enabled", isEnabled);

@@ -57,10 +57,12 @@ class Netflix implements Service {
 
   private subCache: TSubCache[];
   private adBreaks: TAdBreak[];
+  private currentTitle: string;
 
   constructor() {
     this.subCache = [];
     this.adBreaks = [];
+    this.currentTitle = "";
 
     this.handleNetflixData = this.handleNetflixData.bind(this);
     this.handleNetflixVideoReady = this.handleNetflixVideoReady.bind(this);
@@ -92,6 +94,26 @@ class Netflix implements Service {
     if (title === "") return parse("");
 
     const moveId = this.getMoveId();
+
+    // Resolve 'auto' by picking a sensible alternative; fallback to any available
+    if (title === "auto") {
+      const items = this.subCache.filter((item) => item.videoId == moveId);
+      if (items.length === 0) return parse("");
+
+      const currentBase = this.extractBaseLang(this.currentTitle);
+      const differentBase = items.find((item) => this.extractBaseLang(item.title) !== currentBase);
+      const differentVariant = items.find((item) => item.title !== this.currentTitle);
+      const selected = differentBase?.title || differentVariant?.title || items[0].title;
+
+      console.log("Netflix auto dual selection", {
+        currentTitle: this.currentTitle,
+        selectedTitle: selected,
+        availableTitles: items.map((i) => i.title),
+      });
+
+      title = selected;
+    }
+
     const subCacheItem = this.subCache.find((item) => item.videoId == moveId && item.title === title);
 
     const isSubCacheAdBreaksSame = JSON.stringify(subCacheItem.adBreaks) == JSON.stringify(this.adBreaks);
@@ -117,6 +139,17 @@ class Netflix implements Service {
       subCacheItem.adBreaks = JSON.parse(JSON.stringify(this.adBreaks));
       return subs;
     }
+  }
+
+  private handleNetflixSubtitlesChanged(event: CustomEvent<TTrackChanged>) {
+    console.log("handleNetflixSubtitlesChanged", event.detail);
+    const title = this.getTrackChangedTitle(event.detail);
+    this.currentTitle = title;
+    esSubsChanged(title);
+  }
+
+  private extractBaseLang(title: string): string {
+    return title.replace("-forced", "").replace("[cc]", "").trim();
   }
 
   public getSubsContainer() {
@@ -189,10 +222,7 @@ class Netflix implements Service {
     esRenderSetings();
   }
 
-  private handleNetflixSubtitlesChanged(event: CustomEvent<TTrackChanged>) {
-    console.log("handleNetflixSubtitlesChanged", event.detail);
-    esSubsChanged(this.getTrackChangedTitle(event.detail));
-  }
+  // duplicate handleNetflixSubtitlesChanged removed; see earlier method with currentTitle tracking
 
   private handleAddStateChanged(event: CustomEvent<{ currentBreak: TAd; delay: number }>) {
     console.log("handleNetflixSubtitlesChanged", event.detail);

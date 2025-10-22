@@ -1,10 +1,8 @@
 import { parse, subTitleType } from "subtitle";
-import { getSubtitles } from "youtube-caption-extractor";
 
 import { esSubsChanged } from "@src/models/subs";
 import { esRenderSetings } from "@src/models/settings";
 import Service from "./service";
-import { url } from "inspector";
 
 type YoutubeSubtitle = {
   dDurationMs: number;
@@ -25,9 +23,11 @@ class Youtube implements Service {
       [lang: string]: string;
     };
   };
+  private currentLang: string;
 
   constructor() {
     this.subCache = {};
+    this.currentLang = "";
     this.handleCaptionsData = this.handleCaptionsData.bind(this);
     this.handleCaptionsChanges = this.handleCaptionsChanges.bind(this);
   }
@@ -42,7 +42,64 @@ class Youtube implements Service {
   public async getSubs(label: string) {
     if (!label) return parse("");
     const videoId = this.getVideoId();
-    const urlObject: URL = new URL(this.subCache[videoId][label]);
+    const cacheForVideo = this.subCache[videoId] || {};
+
+    // Resolve 'auto (original)': prefer the base 'lang' (original track)
+    let targetLabel = label;
+    let baseHref: string | undefined;
+    if (label === "auto") {
+      const keys = Object.keys(cacheForVideo);
+      const anyHref = Object.values(cacheForVideo)[0];
+      if (!anyHref && keys.length === 0) return parse("");
+
+      // Try to infer original language from cached URL's 'lang' (base track)
+      if (anyHref) {
+        const anyUrl = new URL(anyHref);
+        const originalLang = anyUrl.searchParams.get("lang") || "";
+
+        if (originalLang && originalLang !== this.currentLang) {
+          // Pick original track language
+          targetLabel = originalLang;
+          // Use cached href if present for original; otherwise build it by removing 'tlang'
+          baseHref = cacheForVideo[targetLabel];
+          if (!baseHref) {
+            anyUrl.searchParams.delete("tlang");
+            anyUrl.searchParams.set("lang", originalLang);
+            baseHref = anyUrl.href;
+          }
+        } else {
+          // Fallback: choose any track different from current main
+          const different = keys.find((k) => k && k !== this.currentLang);
+          targetLabel = different || keys[0] || "";
+          if (!targetLabel) return parse("");
+        }
+      } else {
+        // No hrefs cached yet; nothing to resolve
+        return parse("");
+      }
+    }
+
+    // Prefer exact cache hit when not resolved above; otherwise fallback and set `tlang` for translations
+    if (!baseHref) {
+      baseHref = cacheForVideo[targetLabel];
+
+      if (!baseHref) {
+        const anyHref = Object.values(cacheForVideo)[0];
+        if (!anyHref) return parse("");
+        const anyUrl = new URL(anyHref);
+        const currentLang = anyUrl.searchParams.get("tlang") || anyUrl.searchParams.get("lang");
+        // If requested target differs from base, request machine translation via `tlang`
+        if (targetLabel && targetLabel !== currentLang) {
+          anyUrl.searchParams.set("tlang", targetLabel);
+        } else {
+          // If target equals base, ensure we don't set a redundant translation param
+          anyUrl.searchParams.delete("tlang");
+        }
+        baseHref = anyUrl.href;
+      }
+    }
+
+    const urlObject: URL = new URL(baseHref);
 
     const subUri: string = urlObject.href;
     const resp = await fetch(subUri);
@@ -104,11 +161,13 @@ class Youtube implements Service {
     const urlObject = new URL(event.detail);
     const lang = urlObject.searchParams.get("tlang") || urlObject.searchParams.get("lang") || "";
     const videoId = urlObject.searchParams.get("v") || "";
-    this.subCache[videoId] = {};
+    // Preserve existing map to accumulate available tracks
+    this.subCache[videoId] = this.subCache[videoId] || {};
     this.subCache[videoId][lang] = urlObject.href;
   }
 
   private handleCaptionsChanges(event: CustomEvent): void {
+    this.currentLang = event.detail;
     esSubsChanged(event.detail);
   }
 

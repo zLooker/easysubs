@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from "react";
 import { useUnit } from "effector-react";
 import Draggable from "react-draggable";
 
-import { $currentSubs } from "@src/models/subs";
+import { $currentSubs, $currentDualSubs } from "@src/models/subs";
 import { $video, $wasPaused, wasPausedChanged } from "@src/models/videos";
 import { TSub, TSubItem } from "@src/models/types";
 import {
@@ -11,6 +11,7 @@ import {
   $subsBackground,
   $subsBackgroundOpacity,
   $subsFontSize,
+  $dualSubEnabled,
 } from "@src/models/settings";
 import {
   $findPhrasalVerbsPendings,
@@ -26,8 +27,8 @@ import { SubFullTranslation } from "./SubFullTranslation";
 type TSubsProps = {};
 
 export const Subs: FC<TSubsProps> = () => {
-  const [video, currentSubs, subsFontSize, moveBySubsEnabled, wasPaused, handleWasPausedChanged, autoStopEnabled] =
-    useUnit([$video, $currentSubs, $subsFontSize, $moveBySubsEnabled, $wasPaused, wasPausedChanged, $autoStopEnabled]);
+  const [video, currentSubs, currentDualSubs, subsFontSize, moveBySubsEnabled, wasPaused, handleWasPausedChanged, autoStopEnabled, dualSubEnabled] =
+    useUnit([$video, $currentSubs, $currentDualSubs, $subsFontSize, $moveBySubsEnabled, $wasPaused, wasPausedChanged, $autoStopEnabled, $dualSubEnabled]);
 
   useEffect(() => {
     if (moveBySubsEnabled) {
@@ -69,6 +70,13 @@ export const Subs: FC<TSubsProps> = () => {
         {currentSubs.map((sub) => (
           <Sub sub={sub} />
         ))}
+        {dualSubEnabled && currentDualSubs.length > 0 && (
+          <div className="es-dual-subs">
+            {currentDualSubs.map((sub) => (
+              <DualSub sub={sub} />
+            ))}
+          </div>
+        )}
       </div>
     </Draggable>
   );
@@ -159,6 +167,37 @@ const SubItem: FC<TSubItemProps> = ({ subItem, index }) => {
         )}
       </pre>
       <pre className="es-sub-item-space"> </pre>
+    </>
+  );
+};
+
+const DualSub: FC<{ sub: TSub }> = ({ sub }) => {
+  const [subsBackground, subsBackgroundOpacity] = useUnit([
+    $subsBackground,
+    $subsBackgroundOpacity,
+  ]);
+
+  return (
+    <div
+      className="es-dual-sub"
+      style={{
+        background: `rgba(0, 0, 0, ${subsBackground ? subsBackgroundOpacity / 100 : 0})`,
+      }}
+    >
+      {sub.items.map((item, index) => (
+        <DualSubItem key={index} subItem={item} />
+      ))}
+    </div>
+  );
+};
+
+const DualSubItem: FC<{ subItem: TSubItem }> = ({ subItem }) => {
+  return (
+    <>
+      <pre className={`es-dual-sub-item ${subItem.tag}`}>
+        {subItem.text}
+      </pre>
+      <pre className="es-dual-sub-item-space"> </pre>
     </>
   );
 };

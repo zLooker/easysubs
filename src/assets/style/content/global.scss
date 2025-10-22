@@ -84,6 +84,31 @@
       margin-bottom: -10px;
     }
   }
+
+  .es-dual-subs {
+    margin-top: 8px;
+  }
+
+  .es-dual-sub {
+    text-align: center;
+    line-height: 1.25;
+    padding: 0 10px;
+    opacity: 0.85;
+    font-size: 0.85em;
+  }
+
+  .es-dual-sub-item {
+    display: inline;
+    position: relative;
+
+    pre {
+      display: inline;
+    }
+  }
+
+  .es-dual-sub-item-space {
+    display: inline;
+  }
 }
 
 .es-kinopub.es-enabled {

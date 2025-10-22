@@ -22,6 +22,8 @@ import {
 } from "@src/models/settings";
 import { EnableNetflixOnFlight } from "./EnableNetflixOnFlight";
 import { EnableAutoStop } from "./EnableAutoStop";
+import { EnableDualSub } from "./EnableDualSub";
+import { DualSubLanguage } from "./DualSubLanguage";
 import { createPortal } from "react-dom";
 
 interface TabProps {
@@ -142,6 +144,12 @@ export const SettingsContent: FC<{ onClose: () => void }> = ({ onClose }) => {
             </div> */}
               <div className="es-settings-content__item">
                 <EnableAutoStop />
+              </div>
+              <div className="es-settings-content__item">
+                <EnableDualSub />
+              </div>
+              <div className="es-settings-content__item">
+                <DualSubLanguage />
               </div>
             </>
           )}

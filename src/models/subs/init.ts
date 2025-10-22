@@ -20,10 +20,16 @@ import {
   subsReloadRequested,
   ES_CUSTOM_SUB_LABEL,
   rawSubsAdded,
+  $rawDualSubs,
+  $dualSubs,
+  $currentDualSubs,
+  fetchDualSubs,
+  fetchDualSubsFx,
+  updateCurrentDualSubsFx,
 } from ".";
 import { $streaming } from "../streamings";
 import { $video, videoTimeUpdate } from "../videos";
-import { $autoPause } from "../settings";
+import { $autoPause, $dualSubEnabled, $dualSubLanguage, $translateLanguage } from "../settings";
 import { debug } from "patronum";
 
 split({
@@ -118,6 +124,45 @@ $subsLanguage.on(subsLanguageDetectFx.doneData, (_, lang) => lang);
 $subsTitle.on(esSubsChanged, (_, value) => value);
 $subsTitle.on(updateCustomSubsFx.doneData, () => ES_CUSTOM_SUB_LABEL);
 
+// Dual subs logic: pass 'auto' to provider when selected
+sample({
+  clock: [$dualSubEnabled, $dualSubLanguage, $translateLanguage],
+  source: { streaming: $streaming, language: $dualSubLanguage, enabled: $dualSubEnabled },
+  filter: ({ enabled, language }) => {
+    if (!enabled) return false;
+    return !!language;
+  },
+  fn: ({ streaming, language }) => ({
+    streaming,
+    language: language !== "auto" ? language : "auto",
+  }),
+  target: fetchDualSubsFx,
+});
+
+// Re-fetch dual subs when main subtitle track changes, if dual language is 'auto'
+sample({
+  clock: esSubsChanged,
+  source: { streaming: $streaming, enabled: $dualSubEnabled, language: $dualSubLanguage },
+  filter: ({ enabled, language }) => enabled && language === "auto",
+  fn: ({ streaming }) => ({ streaming, language: "auto" }),
+  target: fetchDualSubsFx,
+});
+
+sample({
+  clock: [videoTimeUpdate, $rawDualSubs],
+  source: { subs: $dualSubs, video: $video, enabled: $dualSubEnabled },
+  filter: ({ enabled }) => enabled,
+  fn: ({ subs, video }) => ({ subs, video }),
+  target: updateCurrentDualSubsFx,
+});
+
+$rawDualSubs.on(fetchDualSubsFx.doneData, (_, subs) => subs);
+$rawDualSubs.reset($dualSubEnabled.updates.filter({ fn: (enabled) => !enabled }));
+
+$currentDualSubs.on(updateCurrentDualSubsFx.doneData, (oldSubs, subs) =>
+  JSON.stringify(oldSubs) === JSON.stringify(subs) ? oldSubs : subs
+);
+
 debug(
   $rawSubs,
   $subs,
@@ -128,5 +173,8 @@ debug(
   subsReloadRequested,
   $subsTitle,
   esSubsChanged,
-  subsLanguageDetectFx
+  subsLanguageDetectFx,
+  $rawDualSubs,
+  $dualSubs,
+  $currentDualSubs
 );

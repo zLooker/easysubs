@@ -15,6 +15,10 @@ export const $subsLanguage = createStore<string>("auto");
 export const $subsTitle = createStore<string>(null);
 export const $currentSubs = createStore<TSub[]>([]);
 export const $prevCurrentSubs = createStore<TSub[]>([]);
+
+export const $rawDualSubs = createStore<Captions>([]);
+export const $dualSubs = $rawDualSubs.map((subtitle) => convertRawSubs(subtitle));
+export const $currentDualSubs = createStore<TSub[]>([]);
 export const esSubsChanged = createEvent<string>();
 export const autoPauseFx = createEffect<
   {
@@ -64,3 +68,18 @@ export const subsLanguageDetectFx = createEffect<TSub[], string>(async (subs) =>
     console.error(error);
   }
 });
+
+export const fetchDualSubs = createEvent<{ streaming: Service; language: string }>();
+export const fetchDualSubsFx = createEffect<{ streaming: Service; language: string }, Captions>(
+  async ({ streaming, language }) => {
+    try {
+      return await streaming.getSubs(language);
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  }
+);
+export const updateCurrentDualSubsFx = createEffect<{ subs: TSub[]; video: UnitValue<typeof $video> }, TSub[]>(
+  ({ subs, video }) => getCurrentSubs(subs, video!.currentTime * 1000)
+);
