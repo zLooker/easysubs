@@ -104,6 +104,15 @@
     pre {
       display: inline;
     }
+
+    &:hover {
+      color: #3a88a2;
+      cursor: pointer;
+    }
+
+    &-highlighted {
+      color: #3a88a2;
+    }
   }
 
   .es-dual-sub-item-space {

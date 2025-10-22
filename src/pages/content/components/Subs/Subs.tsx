@@ -192,10 +192,49 @@ const DualSub: FC<{ sub: TSub }> = ({ sub }) => {
 };
 
 const DualSubItem: FC<{ subItem: TSubItem }> = ({ subItem }) => {
+  const [currentPhrasalVerb, handleSubItemMouseEntered, handleSubItemMouseLeft, findPhrasalVerbsPendings] = useUnit([
+    $currentPhrasalVerb,
+    subItemMouseEntered,
+    subItemMouseLeft,
+    $findPhrasalVerbsPendings,
+  ]);
+  const [showTranslation, setShowTranslation] = useState(false);
+
+  const handleOnMouseLeave = () => {
+    setShowTranslation(false);
+    handleSubItemMouseLeft();
+  };
+
+  const handleOnMouseEnter = () => {
+    setShowTranslation(true);
+    handleSubItemMouseEntered(subItem.cleanedText);
+  };
+
+  const handleClick = () => {
+    setShowTranslation(false);
+    handleSubItemMouseLeft();
+  };
+
   return (
     <>
-      <pre className={`es-dual-sub-item ${subItem.tag}`}>
+      <pre
+        onMouseEnter={handleOnMouseEnter}
+        onMouseLeave={handleOnMouseLeave}
+        className={`es-dual-sub-item ${subItem.tag} ${
+          currentPhrasalVerb?.indexes?.includes(0) ? "es-sub-item-highlighted" : ""
+        }`}
+        onClick={handleClick}
+      >
         {subItem.text}
+        {!findPhrasalVerbsPendings[subItem.cleanedText] && showTranslation && (
+          <>
+            {currentPhrasalVerb ? (
+              <PhrasalVerbTranslation phrasalVerb={currentPhrasalVerb} />
+            ) : (
+              <SubItemTranslation text={subItem.cleanedText} />
+            )}
+          </>
+        )}
       </pre>
       <pre className="es-dual-sub-item-space"> </pre>
     </>
